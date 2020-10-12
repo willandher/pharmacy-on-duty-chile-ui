@@ -127,5 +127,8 @@
       }
     }
   },
-  "defaultProject": "pharmacy-on-duty-ui"
+  "defaultProject": "pharmacy-on-duty-ui",
+  "cli": {
+    "analytics": "15d1eb37-3444-4f1c-9268-8426b8375502"
+  }
 }

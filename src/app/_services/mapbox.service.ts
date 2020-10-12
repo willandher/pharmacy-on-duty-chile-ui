@@ -1,56 +1,31 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-
 import * as mapboxgl from 'mapbox-gl';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { ComunaDto } from '../model/comuna-dto';
-
 
 @Injectable({
   providedIn: 'root'
 })
 export class MapboxService {
 
-  map: mapboxgl.Map;
-	style = 'mapbox://styles/mapbox/streets-v11';
-	lat = -33.4372;
-	lng = -70.6506;
-  zoom = 12;
-
-  source = {
-    'type': 'FeatureCollection',
-      'features': [
-        {
-          'type': 'Feature',
-          'geometry': {
-            'type': 'Point',
-            'coordinates': [-121.415061, 40.506229]
-          }
-        },
-        {
-          'type': 'Feature',
-          'geometry': {
-            'type': 'Point',
-            'coordinates': [-121.505184, 40.488084]
-          }
-        },
-        {
-          'type': 'Feature',
-          'geometry': {
-            'type': 'Point',
-            'coordinates': [-121.354465, 40.488737]
-          }
-        }
-      ]
-  }
-  
   apiUrl = environment.apiUrl;
 
-  constructor(private http : HttpClient)  { 
-    mapboxgl.accessToken = environment.mapbox.accessToken;
+  map: mapboxgl.Map;
+  style = 'mapbox://styles/mapbox/streets-v11';
+  lat = -33.448890;
+  lng = -70.669265;
+  zoom = 12
+  data = {
+    'type': 'FeatureCollection',
+    'features': []
   }
 
+  constructor(
+    private http: HttpClient
+  ) {
+    mapboxgl.accessToken = environment.mapbox.accessToken;
+  }
 
   buildMap() {
     this.map = new mapboxgl.Map({
@@ -59,113 +34,117 @@ export class MapboxService {
       zoom: this.zoom,
       center: [this.lng, this.lat]
     })
-   this.map.addControl(new mapboxgl.NavigationControl());
-
+    this.map.addControl(new mapboxgl.NavigationControl());
   }
 
-  addPoint(json){
-    this.map.on('load',()=>{
-
-      
-      this.map.addSource('farmacias',{
-        'type':'geojson',
-        'data':{'type': 'FeatureCollection',
-        'features':json}  
-       });
-       this.map.addLayer({
-         "id":"maine",
-         "type":"circle",
-         "source":"farmacias",
-         "layout":{   
-         },
-         'paint': {
+  addPoints() {
+    this.map.on('load', () => {
+      this.map.addSource('points', {
+        'type': 'geojson',
+        'data': this.data
+      })
+      this.map.addLayer({
+        'id': 'pharmacies',
+        'type': 'circle',
+        'source': 'points',
+        'paint': {
           'circle-radius': 6,
           'circle-color': '#B42222'
-          }
-       });
-    })
+        }
+      });
+      this.map.getCanvas().style.cursor = 'pointer';
+    });
+    // Change the cursor to a pointer when the mouse is over the places layer.
+    this.map.on('mouseenter', 'pharmacies', () => {
+      this.map.getCanvas().style.cursor = 'pointer';
+    });
+
+    // Change it back to a pointer when it leaves.
+    this.map.on('mouseleave', 'pharmacies', () => {
+      this.map.getCanvas().style.cursor = '';
+    });
+
+    this.map.on('click', 'pharmacies', (e) => {
+      var coordinates = e.features[0].geometry.coordinates.slice();
+      var description = e.features[0].properties.description;
+
+      // Ensure that if the map is zoomed out such that multiple
+      // copies of the feature are visible, the popup appears
+      // over the copy being pointed to.
+      while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+        coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+      }
+
+      new mapboxgl.Popup()
+        .setLngLat(coordinates)
+        .setHTML(description)
+        .addTo(this.map);
+    });
   }
-/**
- * se extrae todas las colonias
- */
+
+  updatePoints(source) {
+    var features = []
+    this.map.flyTo({
+      center: [
+        source[0].localLng,
+        source[0].localLat,
+      ],
+      essential: true // this animation is considered essential with respect to prefers-reduced-motion
+    });
+    console.log(source.length)
+    source.map(item => {
+      features = [...features,
+      {
+        'type': 'Feature',
+        'properties': {
+          'description': `<strong>${item.nombreLocal}</strong><p>${item.direccion}</p><p>Telefonos: ${item.telefono}</p>`,
+        },
+        'geometry': {
+          'type': 'Point',
+          'coordinates': [item.localLng, item.localLat]
+        }
+      }
+      ]
+    })
+    var data = {
+      'type': 'FeatureCollection',
+      'features': features
+    }
+    this.map.getSource('points').setData(data)
+  }
+
+  getPharmacies(id) {
+    return this.http.get(`https://pharmacy-service-dev-ftsn5nwobq-uc.a.run.app/pharmacies/${id}`)
+  }
+
   getAllComuna(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/comunas`);
   }
 
-  /**
-   * 
-   * @param data objeto compuesto por el id de la region y la colonia que nos sirven para buscar los locales
-   */
-  getLocalComuna(data): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/localByComuna/`,data);
+  getLocales(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/locales`);
   }
 
-/**
- * 
- * @param comuna nombre de comuna
- * @param localNombre local
- */
   getFarmaciaDeTurno(comuna,localNombre): Observable<any> {
 
     let params = new HttpParams();
     params = params.append('comuna', comuna);
     params = params.append('localNombre', localNombre);
 
+
     return this.http.get<any>(`${this.apiUrl}/pharmaciesOnDuty/`,{
       params:params
     });
   }
-  
 
-  putno1 () {
-    map.on('load', function () {
-      map.addSource('maine', {
-      'type': 'geojson',
-      'data': {
-      'type': 'Feature',
-      'geometry': {
-      'type': 'Polygon',
-      'coordinates': [
-      [
-      [-67.13734351262877, 45.137451890638886],
-      [-66.96466, 44.8097],
-      [-68.03252, 44.3252],
-      [-69.06, 43.98],
-      [-70.11617, 43.68405],
-      [-70.64573401557249, 43.090083319667144],
-      [-70.75102474636725, 43.08003225358635],
-      [-70.79761105007827, 43.21973948828747],
-      [-70.98176001655037, 43.36789581966826],
-      [-70.94416541205806, 43.46633942318431],
-      [-71.08482, 45.3052400000002],
-      [-70.6600225491012, 45.46022288673396],
-      [-70.30495378282376, 45.914794623389355],
-      [-70.00014034695016, 46.69317088478567],
-      [-69.23708614772835, 47.44777598732787],
-      [-68.90478084987546, 47.184794623394396],
-      [-68.23430497910454, 47.35462921812177],
-      [-67.79035274928509, 47.066248887716995],
-      [-67.79141211614706, 45.702585354182816],
-      [-67.13734351262877, 45.137451890638886]
-      ]
-      ]
-      }
-      }
-      });
-      map.addLayer({
-      'id': 'maine',
-      'type': 'fill',
-      'source': 'maine',
-      'layout': {},
-      'paint': {
-      'fill-color': '#088',
-      'fill-opacity': 0.8
-      }
-      });
-      });
+  getLocalComuna(data): Observable<any> {
+    let params = new HttpParams();
+    params = params.append('comuna', data.nameComuna);
+    params = params.append('idRegion', data.idRegion);
+    return this.http.get<any>(`${this.apiUrl}/localByComuna/`,{
+      params:params
+    });
   }
 
+
 }
-
-
-

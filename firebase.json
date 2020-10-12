@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "public": "dist/pharmacy-on-duty-ui",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}

@@ -7,7 +7,7 @@ export const environment = {
   mapbox:{
     accessToken: 'pk.eyJ1Ijoid2lsbGFuZGhlcmciLCJhIjoiY2tnNWVzaXlzMHNycDMxcXIwcjEyajZpOSJ9.UwYHU7iG7x5EDfbMaQT77w'
   },
-  apiUrl: 'http://localhost:8080'
+  apiUrl: 'https://pharmacy-service-dev-ftsn5nwobq-uc.a.run.app'
 };
 
 /*
