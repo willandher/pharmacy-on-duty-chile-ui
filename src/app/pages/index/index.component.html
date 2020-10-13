@@ -16,7 +16,7 @@
            placeholder="Buscar local"
            aria-label="Number"
            matInput
-           [formControl]="searchLocal"
+           [formControl]="localForm"
            [matAutocomplete]="autoLocal">
     <mat-autocomplete   autoActiveFirstOption #autoLocal="matAutocomplete" [displayWith]="displayFnLocal">
       <mat-option *ngFor="let optionLocal of filteredOptionsLocal | async" [value]="optionLocal" (click)="onSelectOptionLocal(optionLocal)" >

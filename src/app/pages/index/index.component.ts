@@ -15,8 +15,8 @@ export interface Comuna {
   styleUrls: ['./index.component.scss']
 })
 export class IndexComponent implements OnInit {
-  searchForm= new FormControl();
-  searchLocal= new FormControl();
+  searchForm = new FormControl();
+  localForm = new FormControl();
   options: Comuna[];
   optionComuna: string;
   optionLocal: string;
@@ -32,9 +32,6 @@ export class IndexComponent implements OnInit {
 
   ngOnInit(): void {
     this.getAllComunas();
-    this.mapboxService.buildMap();
-    this.mapboxService.addPoints();
-
   }
 
   displayFn(comuna: Comuna): string {
@@ -62,7 +59,9 @@ export class IndexComponent implements OnInit {
 
   getAllComunas(){
     this.mapboxService.getAllComuna().subscribe(data =>{
-      this.options = data;
+      this.options = data.filter((comuna) => comuna.nameComuna !== 'Elija Comuna');
+      this.mapboxService.buildMap();
+      this.mapboxService.addPoints();
       this.filteredOptions = this.searchForm.valueChanges
       .pipe(
         startWith(''),
@@ -76,7 +75,7 @@ export class IndexComponent implements OnInit {
   getLocalesPorComunas(data) : void {
     this.mapboxService.getLocalComuna(data).subscribe(data =>{
       this.optionsLocal = data;
-      this.filteredOptionsLocal = this.searchLocal.valueChanges.pipe(
+      this.filteredOptionsLocal = this.localForm.valueChanges.pipe(
         startWith(''),
         map(value => this.filterLocal(value))
       );
@@ -99,7 +98,9 @@ export class IndexComponent implements OnInit {
   }
 
   onSelectOptionComuna(optionComuna){
+    this.localForm.setValue('');
     this.optionComuna = optionComuna.nameComuna;
+    this.optionsLocal = [];
     this.getLocalesPorComunas(optionComuna);
   }
 
