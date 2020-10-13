@@ -7,21 +7,23 @@ import { HttpClientModule } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { IndexComponent } from './pages/index/index.component';
+import { IndexComponent, DialogOverviewExampleDialog } from './pages/index/index.component';
 
 import {MatSelectModule} from '@angular/material/select';
-import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatFormFieldModule, MatLabel} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatIconModule} from '@angular/material/icon';
 import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import { MatDialogModule } from '@angular/material/dialog';
 
 @NgModule({
   declarations: [
     AppComponent,
-    IndexComponent
+    IndexComponent,
+    DialogOverviewExampleDialog
   ],
   exports: [
-    MatAutocompleteModule]
+    MatAutocompleteModule,MatDialogModule]
 ,
   imports: [
     BrowserModule,
@@ -34,8 +36,10 @@ import {MatAutocompleteModule} from '@angular/material/autocomplete';
     MatFormFieldModule,
     MatInputModule,
     MatIconModule,
-    MatAutocompleteModule
+    MatAutocompleteModule,
+    MatDialogModule,
   ],
+  entryComponents: [ DialogOverviewExampleDialog],
   providers: [],
   bootstrap: [AppComponent]
 })

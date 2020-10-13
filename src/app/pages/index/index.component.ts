@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { MapboxService } from 'src/app/_services/mapbox.service';
 import {map, startWith} from 'rxjs/operators';
+import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
 export interface Comuna {
   idRegion: number;
   nameComuna: string;
@@ -25,7 +26,7 @@ export class IndexComponent implements OnInit {
   filteredOptionsLocal: Observable<string[]>;
 
 
-  constructor( private formBuilder: FormBuilder, private mapboxService: MapboxService) {
+  constructor( public dialog: MatDialog, private mapboxService: MapboxService) {
 
   }
 
@@ -79,6 +80,8 @@ export class IndexComponent implements OnInit {
         startWith(''),
         map(value => this.filterLocal(value))
       );
+    },data=>{
+      console.log("se fue por el error ",data);
     })
   }
 
@@ -89,6 +92,9 @@ export class IndexComponent implements OnInit {
     console.log("buscar presionado",this.optionComuna,this.optionLocal)
     this.mapboxService.getFarmaciaDeTurno(this.optionComuna,this.optionLocal).subscribe((data)=>{
       this.mapboxService.updatePoints(data);
+    },(data)=>{
+      this.openDialog();
+      console.log("Error",data);
     })
   }
 
@@ -97,9 +103,33 @@ export class IndexComponent implements OnInit {
     this.getLocalesPorComunas(optionComuna);
   }
 
-  buscar() {
+  openDialog(): void {
+    const dialogRef = this.dialog.open(DialogOverviewExampleDialog, {
+      width: '250px',
+      data: {}
+    });
 
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('The dialog was closed');
+    });
   }
 
+
+
+}
+
+@Component({
+  selector: 'dialog-overview-example-dialog',
+  templateUrl: 'dialog-simple.html',
+})
+export class DialogOverviewExampleDialog {
+
+  constructor(
+    public dialogRef: MatDialogRef<DialogOverviewExampleDialog>,
+    @Inject(MAT_DIALOG_DATA) public data: {}) {}
+
+  onNoClick(): void {
+    this.dialogRef.close();
+  }
 
 }
